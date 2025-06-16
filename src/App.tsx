@@ -59,6 +59,34 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    // Define the event listener for messages from the iframe
+    const message_handler = (event: any) => {
+      // Ensure the message comes from the correct PayFabric domain
+
+      try {
+        const data = JSON.parse(event?.data);
+        if (data.type === "EbizTokens") {
+          const { CustToken, PmToken } = data;
+
+          // Now you can send this data to the parent window (if needed)
+          window.parent.postMessage(
+            { type: "ReceivedEbizTokens", CustToken, PmToken },
+            "*"
+          );
+        }
+      } catch (err) {}
+
+      // Attach the event listener
+      window.addEventListener("message", message_handler);
+
+      // Cleanup function to remove the event listener when component unmounts
+      return () => {
+        window.removeEventListener("message", message_handler);
+      };
+    };
+  }, []);
+
   return <iframe src={iframeUrl as any} />;
 }
 
